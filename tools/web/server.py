@@ -331,7 +331,11 @@ def create_app() -> Flask:
 
     @app.get("/")
     def index():
-        return render_template("index.html")
+        return render_template("index.html", active_nav="workspace")
+
+    @app.get("/settings")
+    def settings_page():
+        return render_template("settings.html", active_nav="settings")
 
     # -- Profiles ------------------------------------------------------------
 

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}模型配置 · llm2lvgl{% endblock %}
+{% block eyebrow %}模型与 API{% endblock %}
+{% block heading %}模型配置{% endblock %}
+{% block status %}模型配置{% endblock %}
+
+{% block content %}
+<main class="main-grid settings-single" id="main-content">
+  <section class="panel" aria-labelledby="settings-title">
+    <div class="panel-header">
+      <div>
+        <p class="section-label">Model Registry</p>
+        <h3 id="settings-title">模型与 API 设置</h3>
+      </div>
+      <span class="panel-meta">多供应商 · 多模型 · 按角色分配</span>
+    </div>
+
+    <div class="settings-body">
+      <h4 class="settings-subtitle">供应商 Provider</h4>
+      <p class="field-hint">配置一次 base_url 与 API Key，多个模型可复用同一供应商。</p>
+      <div id="provider-list"></div>
+      <div class="settings-add-row">
+        <select id="provider-preset-select" aria-label="预设供应商">
+          <option value="">选择预设供应商…</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" id="add-provider-btn" type="button">添加供应商</button>
+      </div>
+      <datalist id="provider-base-presets"></datalist>
+
+      <h4 class="settings-subtitle">模型 Model</h4>
+      <p class="field-hint">给模型起一个昵称，绑定供应商与真实模型名，勾选是否支持视觉。</p>
+      <div id="model-list"></div>
+      <button class="btn btn-secondary btn-sm" id="add-model-btn" type="button">添加模型</button>
+
+      <h4 class="settings-subtitle">角色分配 Role</h4>
+      <p class="field-hint">图形/页面分析、代码生成、精调修正可分别选用不同模型。</p>
+      <div id="role-list"></div>
+
+      <div class="settings-actions">
+        <button class="btn btn-primary btn-sm" id="save-settings-btn" type="button">保存设置</button>
+        <span class="settings-msg" id="settings-msg" role="status" aria-live="polite"></span>
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='settings.js') }}?v=10"></script>
+{% endblock %}

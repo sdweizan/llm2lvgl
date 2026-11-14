@@ -769,6 +769,16 @@ input::placeholder {
   margin: 0;
 }
 
+.settings-single {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "settings";
+}
+
+.settings-single .panel {
+  grid-area: settings;
+  padding: 1.3rem;
+}
+
 @media (max-width: 720px) {
   .settings-grid--provider,
   .settings-grid--model {

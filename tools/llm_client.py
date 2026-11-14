@@ -43,17 +43,29 @@ DEFAULT_ROLE = "generate"
 
 # Built-in provider presets so users never have to memorise a base URL.
 # Every entry is an OpenAI-compatible `/v1` root (or equivalent chat endpoint).
+# `common_models` are convenience suggestions shown in the settings UI; they are
+# not enforced and can be edited/removed freely.
 PROVIDER_PRESETS = [
-    {"id": "openai", "name": "OpenAI", "base_url": "https://api.openai.com/v1"},
-    {"id": "deepseek", "name": "DeepSeek 深度求索", "base_url": "https://api.deepseek.com/v1"},
-    {"id": "zhipu", "name": "智谱 AI (GLM)", "base_url": "https://open.bigmodel.cn/api/paas/v4"},
-    {"id": "qwen", "name": "阿里云通义千问 (Qwen)", "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1"},
-    {"id": "moonshot", "name": "月之暗面 Kimi", "base_url": "https://api.moonshot.cn/v1"},
-    {"id": "siliconflow", "name": "硅基流动 SiliconFlow", "base_url": "https://api.siliconflow.cn/v1"},
-    {"id": "yi", "name": "零一万物 Yi", "base_url": "https://api.lingyiwanwu.com/v1"},
-    {"id": "baidu", "name": "百度千帆 (OpenAI 兼容)", "base_url": "https://qianfan.baidubce.com/v2"},
-    {"id": "ollama", "name": "Ollama (本地)", "base_url": "http://localhost:11434/v1"},
-    {"id": "custom", "name": "自定义 / 其它 OpenAI 兼容", "base_url": ""},
+    {"id": "openai", "name": "OpenAI", "base_url": "https://api.openai.com/v1",
+     "common_models": ["gpt-4o", "gpt-4o-mini", "gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano"]},
+    {"id": "deepseek", "name": "DeepSeek 深度求索", "base_url": "https://api.deepseek.com/v1",
+     "common_models": ["deepseek-chat", "deepseek-reasoner"]},
+    {"id": "zhipu", "name": "智谱 AI (GLM)", "base_url": "https://open.bigmodel.cn/api/paas/v4",
+     "common_models": ["glm-4v-plus", "glm-4-plus", "glm-4v", "glm-4-flash"]},
+    {"id": "qwen", "name": "阿里云通义千问 (Qwen)", "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+     "common_models": ["qwen-vl-max", "qwen-vl-plus", "qwen-max", "qwen-plus", "qwen-coder-plus", "qwen3.8-max"]},
+    {"id": "moonshot", "name": "月之暗面 Kimi", "base_url": "https://api.moonshot.cn/v1",
+     "common_models": ["kimi-latest", "moonshot-v1-8k-vision-preview", "moonshot-v1-32k"]},
+    {"id": "siliconflow", "name": "硅基流动 SiliconFlow", "base_url": "https://api.siliconflow.cn/v1",
+     "common_models": ["Qwen/Qwen2.5-VL-72B-Instruct", "Qwen/Qwen2.5-72B-Instruct", "deepseek-ai/DeepSeek-V3"]},
+    {"id": "yi", "name": "零一万物 Yi", "base_url": "https://api.lingyiwanwu.com/v1",
+     "common_models": ["yi-large", "yi-vision", "yi-lightning"]},
+    {"id": "baidu", "name": "百度千帆 (OpenAI 兼容)", "base_url": "https://qianfan.baidubce.com/v2",
+     "common_models": ["ernie-4.0-turbo-8k", "ernie-speed-8k", "ernie-3.5-8k"]},
+    {"id": "ollama", "name": "Ollama (本地)", "base_url": "http://localhost:11434/v1",
+     "common_models": ["llama3.1", "qwen2.5", "llava", "gemma2"]},
+    {"id": "custom", "name": "自定义 / 其它 OpenAI 兼容", "base_url": "",
+     "common_models": []},
 ]
 
 

@@ -13,20 +13,14 @@
         <p class="section-label">Model Registry</p>
         <h3 id="settings-title">模型与 API 设置</h3>
       </div>
-      <span class="panel-meta">供应商各自填写密钥 · 模型挂在供应商下</span>
+      <span class="panel-meta">各供应商分开填写密钥 · 内置常用模型</span>
     </div>
 
     <div class="settings-body">
-      <h4 class="settings-subtitle">供应商与模型</h4>
-      <p class="field-hint">每个供应商单独填写自己的 API Key，模型挂在该供应商下，点「+ 添加模型」即可。</p>
-      <div id="provider-cards"></div>
-      <div class="settings-add-row">
-        <select id="provider-preset-select" aria-label="预设供应商">
-          <option value="">选择预设供应商…</option>
-        </select>
-        <button class="btn btn-secondary btn-sm" id="add-provider-btn" type="button">添加供应商</button>
-      </div>
-      <datalist id="provider-base-presets"></datalist>
+      <h4 class="settings-subtitle">供应商 Provider</h4>
+      <p class="field-hint">点击供应商标签，填写该供应商的 API Key；每个供应商已内置常用模型，只需填模型名。</p>
+      <div class="provider-tabs" id="provider-tabs" role="tablist" aria-label="供应商"></div>
+      <div id="provider-tab-panels"></div>
 
       <h4 class="settings-subtitle">角色分配 Role</h4>
       <p class="field-hint">图形/页面分析、代码生成、精调修正可分别选用不同模型。</p>
@@ -42,5 +36,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='settings.js') }}?v=12"></script>
+<script src="{{ url_for('static', filename='settings.js') }}?v=13"></script>
 {% endblock %}

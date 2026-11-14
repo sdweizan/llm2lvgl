@@ -13,13 +13,13 @@
         <p class="section-label">Model Registry</p>
         <h3 id="settings-title">模型与 API 设置</h3>
       </div>
-      <span class="panel-meta">多供应商 · 多模型 · 按角色分配</span>
+      <span class="panel-meta">供应商各自填写密钥 · 模型挂在供应商下</span>
     </div>
 
     <div class="settings-body">
-      <h4 class="settings-subtitle">供应商 Provider</h4>
-      <p class="field-hint">配置一次 base_url 与 API Key，多个模型可复用同一供应商。</p>
-      <div id="provider-list"></div>
+      <h4 class="settings-subtitle">供应商与模型</h4>
+      <p class="field-hint">每个供应商单独填写自己的 API Key，模型挂在该供应商下，点「+ 添加模型」即可。</p>
+      <div id="provider-cards"></div>
       <div class="settings-add-row">
         <select id="provider-preset-select" aria-label="预设供应商">
           <option value="">选择预设供应商…</option>
@@ -27,11 +27,6 @@
         <button class="btn btn-secondary btn-sm" id="add-provider-btn" type="button">添加供应商</button>
       </div>
       <datalist id="provider-base-presets"></datalist>
-
-      <h4 class="settings-subtitle">模型 Model</h4>
-      <p class="field-hint">给模型起一个昵称，绑定供应商与真实模型名，勾选是否支持视觉。</p>
-      <div id="model-list"></div>
-      <button class="btn btn-secondary btn-sm" id="add-model-btn" type="button">添加模型</button>
 
       <h4 class="settings-subtitle">角色分配 Role</h4>
       <p class="field-hint">图形/页面分析、代码生成、精调修正可分别选用不同模型。</p>
@@ -47,5 +42,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='settings.js') }}?v=10"></script>
+<script src="{{ url_for('static', filename='settings.js') }}?v=12"></script>
 {% endblock %}

@@ -698,13 +698,50 @@ input::placeholder {
   min-width: 0;
 }
 
-.settings-grid--provider {
-  grid-template-columns: 0.8fr 1fr 1.6fr 1.4fr;
+.settings-grid--model {
+  grid-template-columns: 0.9fr 1fr 1.2fr auto;
+  align-items: center;
 }
 
-.settings-grid--model {
-  grid-template-columns: 0.9fr 1fr 1.1fr 1.2fr auto;
+.provider-card {
+  margin-bottom: 0.8rem;
+  padding: 0.9rem;
+  background: var(--panel-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.provider-card__header {
+  display: flex;
+  gap: 0.5rem;
   align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.provider-card__header input {
+  flex: 1;
+  min-width: 0;
+}
+
+.provider-card__fields {
+  display: grid;
+  grid-template-columns: 1.6fr 1.4fr;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.provider-card__models {
+  border-top: 1px dashed var(--border-strong);
+  padding-top: 0.5rem;
+}
+
+.provider-card__models-head {
+  margin-bottom: 0.4rem;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-soft);
 }
 
 .settings-remove {
@@ -780,9 +817,14 @@ input::placeholder {
 }
 
 @media (max-width: 720px) {
-  .settings-grid--provider,
   .settings-grid--model {
     grid-template-columns: 1fr 1fr;
+  }
+  .provider-card__fields {
+    grid-template-columns: 1fr;
+  }
+  .provider-card__header {
+    flex-wrap: wrap;
   }
   .role-label {
     flex-basis: 96px;

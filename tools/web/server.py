@@ -65,7 +65,7 @@ def _safe_task_id(task_id: str) -> str | None:
 # without limit. ``log_offset`` counts lines dropped from the front, keeping the
 # SSE stream's cursor correct after truncation.
 LOG_MAX_LINES = 4000
-LOG_LINE_MAX = 2000
+LOG_LINE_MAX = 20000
 
 
 def _append_log(run_state: dict, text: str) -> None:
@@ -572,6 +572,9 @@ def create_app() -> Flask:
         except subprocess.CalledProcessError as exc:
             return jsonify(error="analysis failed", detail=exc.stderr or exc.stdout), 400
 
+        if proc.stdout:
+            print(proc.stdout, end="", flush=True)
+
         task = json.loads(tj.read_text("utf-8"))
         return jsonify(ok=True, log=proc.stdout, analysis=_load_analysis(tid, task), task=task)
 
@@ -648,6 +651,7 @@ def create_app() -> Flask:
                 run_state["proc"] = proc
                 for line in proc.stdout:  # type: ignore[union-attr]
                     line = line.rstrip("\n")
+                    print(line, flush=True)
                     _append_log(run_state, line)
                     # Detect step changes from log output
                     ll = line.lower()

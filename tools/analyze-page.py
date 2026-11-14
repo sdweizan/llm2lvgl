@@ -294,7 +294,7 @@ def llm_analysis(
             {"role": "user", "content": content},
         ],
         temperature=0.1,
-        max_tokens=4096,
+        max_tokens=16384,
     )
     data = extract_json_object(response)
     data["schema_version"] = 1

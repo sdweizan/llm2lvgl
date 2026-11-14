@@ -40,6 +40,11 @@ def load_settings() -> dict:
     return {}
 
 
+def _debug_log(msg: str) -> None:
+    """Print a debug line (always on)."""
+    print(f"[llm_debug] {msg}", flush=True)
+
+
 def _get_config() -> tuple[str, str, str | None]:
     """Return (api_key, model, base_url) from settings file or env vars."""
     settings = load_settings()
@@ -172,10 +177,15 @@ def _do_stream(url: str, headers: dict, body: dict, parse_line) -> str:
                                 f"HTTP {status} (non-retryable): {resp.text[:300]}"
                             )
                         raise RuntimeError(f"HTTP {status}: {resp.text[:300]}")
+                    _debug_log(f"HTTP status: {resp.status_code}")
                     is_tty = sys.stdout.isatty()
                     chunks: list[str] = []
                     total_chars = 0
+                    raw_count = 0
                     for line in resp.iter_lines():
+                        if raw_count < 8:
+                            _debug_log(f"raw[{raw_count}]: {line[:300]}")
+                            raw_count += 1
                         result = parse_line(line)
                         if result is _STREAM_DONE or result == _STREAM_DONE:
                             break
@@ -239,17 +249,40 @@ def chat(
             "max_output_tokens": max_tokens,
             "stream": True,
         }
-        return _do_stream(url, headers, body, _parse_responses_line)
+        parse_line = _parse_responses_line
+    else:
+        url = base + "/chat/completions"
+        body = {
+            "model": model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "stream": True,
+        }
+        if "deepseek" in base:
+            # DeepSeek V4 models think by default; the thinking phase eats the
+            # max_tokens budget and can truncate the JSON answer, so disable it
+            # for code/JSON-generation tasks.
+            body["thinking"] = {"type": "disabled"}
+        elif "bigmodel" in base:
+            # GLM-5.3 forces deep thinking (cannot be disabled). Enable it
+            # explicitly and keep the reasoning depth low so the JSON answer
+            # is not starved of the max_tokens budget.
+            body["thinking"] = {"type": "enabled"}
+            body["reasoning_effort"] = "low"
+        parse_line = _parse_chat_line
 
-    url = base + "/chat/completions"
-    body = {
-        "model": model,
-        "messages": messages,
-        "temperature": temperature,
-        "max_tokens": max_tokens,
-        "stream": True,
-    }
-    return _do_stream(url, headers, body, _parse_chat_line)
+    _debug_log(f"POST {url}")
+    req = json.dumps(body, ensure_ascii=False)
+    if len(req) > 2000:
+        req = req[:2000] + " …(truncated)"
+    _debug_log(f"request body: {req}")
+
+    result = _do_stream(url, headers, body, parse_line)
+
+    _debug_log(f"=== full response ({len(result)} chars) ===\n{result}\n=== end response ===")
+
+    return result
 
 
 def extract_code_block(response: str, lang: str = "c") -> str:

@@ -201,7 +201,7 @@ def main() -> int:
                 baseline_code = source_path.read_text(encoding="utf-8")
                 messages = build_build_error_prompt(baseline_code, build_output)
                 print(f"构建修复 第 {fix_attempt} 轮: 调用 LLM...")
-                response = llm_client.chat(messages, max_tokens=4096)
+                response = llm_client.chat(messages, max_tokens=16384)
                 blocks = llm_client.extract_search_replace_blocks(response)
                 if blocks:
                     try:
@@ -271,7 +271,7 @@ def main() -> int:
         messages = build_refine_prompt(
             baseline_code, report, diff_path,
         )
-        response = llm_client.chat(messages, max_tokens=4096)
+        response = llm_client.chat(messages, max_tokens=16384)
         blocks = llm_client.extract_search_replace_blocks(response)
         if blocks:
             try:
@@ -297,7 +297,7 @@ def main() -> int:
             print(f"精调 第 {iteration} 轮: 构建失败，尝试修复...")
             for fix_try in range(1, max_iterations + 1):
                 fix_msgs = build_build_error_prompt(new_code, build_err)
-                fix_resp = llm_client.chat(fix_msgs, max_tokens=4096)
+                fix_resp = llm_client.chat(fix_msgs, max_tokens=16384)
                 fix_blocks = llm_client.extract_search_replace_blocks(fix_resp)
                 if fix_blocks:
                     try:

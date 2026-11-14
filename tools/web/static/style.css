@@ -674,6 +674,111 @@ input::placeholder {
   font-size: 0.84rem;
 }
 
+.settings-subtitle {
+  margin: 0.95rem 0 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-soft);
+}
+
+.settings-item {
+  position: relative;
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.settings-grid {
+  display: grid;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-grid--provider {
+  grid-template-columns: 0.8fr 1fr 1.6fr 1.4fr;
+}
+
+.settings-grid--model {
+  grid-template-columns: 0.9fr 1fr 1.1fr 1.2fr auto;
+  align-items: center;
+}
+
+.settings-remove {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  margin-top: 7px;
+  border-radius: var(--radius-sm);
+  background: var(--panel-muted);
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 800;
+  line-height: 1;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.settings-remove:hover {
+  background: #fde8e7;
+  color: var(--error);
+}
+
+.settings-add-row {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.25rem 0 0.6rem;
+}
+
+.settings-add-row select {
+  flex: 1;
+}
+
+.settings-item--role {
+  align-items: center;
+}
+
+.role-label {
+  flex: 0 0 140px;
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.84rem;
+  color: var(--text-soft);
+}
+
+.settings-item--role select {
+  flex: 1;
+}
+
+.m-vision {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  font-weight: 700;
+}
+
+.m-vision input {
+  width: auto;
+  min-height: auto;
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .settings-grid--provider,
+  .settings-grid--model {
+    grid-template-columns: 1fr 1fr;
+  }
+  .role-label {
+    flex-basis: 96px;
+  }
+}
+
 .action-bar {
   display: flex;
   gap: 0.7rem;

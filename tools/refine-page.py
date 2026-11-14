@@ -2,7 +2,6 @@
 
 import argparse
 import json
-import os
 import re
 import subprocess
 import sys
@@ -185,8 +184,8 @@ def main() -> int:
     if not source_path.is_file():
         raise SystemExit(f"Generated source file not found: {source_path}")
 
-    if not (os.environ.get("OPENAI_API_KEY") or llm_client.load_settings().get("api_key")):
-        raise SystemExit("OPENAI_API_KEY not set. Configure it in Web UI settings or set the environment variable.")
+    if not llm_client.has_api_key():
+        raise SystemExit("API key not set. Configure the provider/model in the Web UI LLM settings or set OPENAI_API_KEY.")
 
     max_iterations = int(task["failure_policy"]["max_iterations"])
     report_path, diff_path, log_path = read_artifacts(task_path)
@@ -201,7 +200,7 @@ def main() -> int:
                 baseline_code = source_path.read_text(encoding="utf-8")
                 messages = build_build_error_prompt(baseline_code, build_output)
                 print(f"构建修复 第 {fix_attempt} 轮: 调用 LLM...")
-                response = llm_client.chat(messages, max_tokens=16384)
+                response = llm_client.chat(messages, role="refine", max_tokens=16384)
                 blocks = llm_client.extract_search_replace_blocks(response)
                 if blocks:
                     try:
@@ -271,7 +270,7 @@ def main() -> int:
         messages = build_refine_prompt(
             baseline_code, report, diff_path,
         )
-        response = llm_client.chat(messages, max_tokens=16384)
+        response = llm_client.chat(messages, role="refine", max_tokens=16384)
         blocks = llm_client.extract_search_replace_blocks(response)
         if blocks:
             try:
@@ -297,7 +296,7 @@ def main() -> int:
             print(f"精调 第 {iteration} 轮: 构建失败，尝试修复...")
             for fix_try in range(1, max_iterations + 1):
                 fix_msgs = build_build_error_prompt(new_code, build_err)
-                fix_resp = llm_client.chat(fix_msgs, max_tokens=16384)
+                fix_resp = llm_client.chat(fix_msgs, role="refine", max_tokens=16384)
                 fix_blocks = llm_client.extract_search_replace_blocks(fix_resp)
                 if fix_blocks:
                     try:

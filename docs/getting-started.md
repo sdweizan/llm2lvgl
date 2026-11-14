@@ -197,13 +197,64 @@ By default it listens on `http://localhost:5000`; adjust with `--host` / `--port
 
 ### LLM Settings (read this first)
 
-Steps such as analyze / generate / refine rely on an LLM. In the Web UI's "LLM Settings" panel, fill in:
+Steps such as analyze / generate / refine rely on an LLM. The Web UI's "模型与 API 设置"
+panel is a **multi-provider / multi-model registry**, organised in three layers:
 
-- **API Key**: the key of an OpenAI-compatible gateway
-- **Model**: e.g. `gpt-4o`, `gpt-5.5`, etc.
-- **Base URL**: **must point to the `/v1` root path**, e.g. `https://api.openai.com/v1` or `https://your-gateway/v1`
+1. **供应商 (Provider)** — a `base_url` + `api_key`, configured once. Pick a preset from the
+   dropdown to avoid typing the base URL:
+   - OpenAI `https://api.openai.com/v1`
+   - DeepSeek `https://api.deepseek.com/v1`
+   - 智谱 GLM `https://open.bigmodel.cn/api/paas/v4`
+   - 阿里云通义千问 `https://dashscope.aliyuncs.com/compatible-mode/v1`
+   - 月之暗面 Kimi `https://api.moonshot.cn/v1`
+   - 硅基流动 SiliconFlow `https://api.siliconflow.cn/v1`
+   - 零一万物 Yi `https://api.lingyiwanwu.com/v1`
+   - 百度千帆 `https://qianfan.baidubce.com/v2`
+   - Ollama (本地) `http://localhost:11434/v1`
+2. **模型 (Model)** — give a nickname to `供应商 + 真实模型名 + 是否支持视觉`. This is the
+   "configure once, reuse everywhere" unit.
+3. **角色 (Role)** — assign a model to each job type:
+   - **图形/页面分析** (`analyze`) — usually a vision model
+   - **代码生成** (`generate`) — usually a strong code model
+   - **精调修正** (`refine`) — vision + build-fix loop
 
-> Common pitfall: when the Base URL is missing `/v1`, requests hit the gateway's web frontend (which returns HTML instead of JSON), so LLM steps silently degrade to heuristic fallbacks, or you get `Expecting value: line 1 column 1`. Model names containing `gpt-5.x` / `o1` / `o3` / `o4` / `codex` automatically use the Responses API (`/responses`); all others use `/chat/completions`.
+Every listed vendor exposes an OpenAI-compatible `/chat/completions` endpoint, so the same
+client works for all of them.
+
+> Common pitfall: when the Base URL is missing `/v1` (or the vendor's equivalent chat root),
+> requests hit the gateway's web frontend (which returns HTML instead of JSON), so LLM steps
+> silently degrade to heuristic fallbacks, or you get `Expecting value: line 1 column 1`.
+> Model names containing `gpt-5.x` / `o1` / `o3` / `o4` / `codex` automatically use the
+> Responses API (`/responses`); all others use `/chat/completions`.
+
+The same settings file (`workspace/.llm_settings.json`) is read by the CLI tools, so a model
+registered once in the UI is available to `tools/pipeline.sh generate`, `analyze`, and `refine`
+without re-entering credentials.
+
+For CLI-only users, the same file can be written by hand:
+
+```json
+{
+  "version": 2,
+  "default_model": "deepseek-chat",
+  "roles": {
+    "analyze": "glm-4v",
+    "generate": "deepseek-chat",
+    "refine": "glm-4v"
+  },
+  "providers": [
+    { "id": "deepseek", "name": "DeepSeek", "base_url": "https://api.deepseek.com/v1", "api_key": "sk-..." },
+    { "id": "zhipu", "name": "智谱 AI", "base_url": "https://open.bigmodel.cn/api/paas/v4", "api_key": "..." }
+  ],
+  "models": [
+    { "id": "deepseek-chat", "name": "DeepSeek Chat", "provider": "deepseek", "model": "deepseek-chat", "vision": false },
+    { "id": "glm-4v", "name": "GLM-4V", "provider": "zhipu", "model": "glm-4v-plus", "vision": true }
+  ]
+}
+```
+
+The legacy flat format `{ "api_key": ..., "model": ..., "base_url": ... }` is still accepted
+and upgraded to v2 automatically on first save.
 
 ### Features
 
@@ -214,4 +265,4 @@ Steps such as analyze / generate / refine rely on an LLM. In the Web UI's "LLM S
 - Stop button to terminate a task at any time while it runs
 - Three-column comparison (reference | current | heatmap) plus the validation report
 - Download the portable LVGL code bundle
-- LLM settings (API Key, model, Base URL) are configured and persisted inside the UI
+- LLM settings (providers, models, role assignment) are configured and persisted inside the UI

@@ -216,8 +216,12 @@ the compiler output is sent to the LLM, which returns targeted fixes.
 CLI pipeline with drag-and-drop upload, real-time SSE log streaming, step progress
 indicators, a stop button for cancelling running tasks, and result visualization.
 
-The Web UI stores LLM settings (API key, model, base URL) in `workspace/.llm_settings.json`,
-which is also read by `tools/llm_client.py` for CLI usage.
+The Web UI stores LLM settings in `workspace/.llm_settings.json`, which is also read by
+`tools/llm_client.py` for CLI usage. The file uses a three-layer schema — **providers**
+(`base_url` + `api_key`), **models** (nickname → provider + real model name + vision flag),
+and **roles** (`analyze` / `generate` / `refine` → model nickname) — so a single model can be
+registered once and assigned to different pipeline stages. The legacy flat
+`{api_key, model, base_url}` format is still accepted and upgraded automatically.
 
 ## Layered Responsibilities
 

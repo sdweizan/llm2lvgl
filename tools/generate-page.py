@@ -2,7 +2,6 @@
 
 import argparse
 import json
-import os
 import re
 import sys
 from pathlib import Path
@@ -297,8 +296,8 @@ def main() -> int:
     if not html_path.is_file():
         raise SystemExit(f"HTML input not found: {html_path}")
 
-    if not (os.environ.get("OPENAI_API_KEY") or llm_client.load_settings().get("api_key")):
-        raise SystemExit("OPENAI_API_KEY not set. Configure it in Web UI settings or set the environment variable.")
+    if not llm_client.has_api_key():
+        raise SystemExit("API key not set. Configure the provider/model in the Web UI LLM settings or set OPENAI_API_KEY.")
 
     page_id = sanitize_identifier(task["page_id"])
     page_name = task["page_name"]
@@ -333,7 +332,7 @@ def main() -> int:
         image_path=image_path, asset_images=asset_images, asset_manifest=asset_manifest,
         analysis=analysis,
     )
-    response = llm_client.chat(messages)
+    response = llm_client.chat(messages, role="generate")
     c_code = llm_client.extract_code_block(response, "c")
 
     output_h.parent.mkdir(parents=True, exist_ok=True)

@@ -32,6 +32,11 @@ TASKS_DIR = REPO_ROOT / "workspace" / "tasks"
 SETTINGS_PATH = REPO_ROOT / "workspace" / ".llm_settings.json"
 PIPELINE_SH = TOOLS_DIR / "pipeline.sh"
 
+# Import the shared multi-provider client (provider presets + role names) so the
+# settings UI and the CLI pipeline use exactly the same vocabulary.
+sys.path.insert(0, str(TOOLS_DIR))
+import llm_client
+
 # In-memory task run state
 TASK_RUNS: dict[str, dict] = {}
 _lock = threading.Lock()
@@ -248,6 +253,69 @@ def _reconcile_run_state(task_id: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# LLM settings: v2 schema (providers / models / roles) with legacy flat compat
+# ---------------------------------------------------------------------------
+
+def _mask_key(key: str) -> str:
+    if not key:
+        return ""
+    if len(key) > 4:
+        return f"sk-...{key[-4:]}"
+    return "sk-...****"
+
+
+def _normalize_settings(raw: dict) -> dict:
+    """Return a v2 settings dict from either v2 or the legacy flat format."""
+    if not raw:
+        raw = {}
+    if raw.get("providers") is not None or raw.get("models") is not None:
+        return dict(raw)
+
+    key = (raw.get("api_key") or "").strip()
+    model = (raw.get("model") or "").strip()
+    base = (raw.get("base_url") or "").strip()
+    providers: list[dict] = []
+    models: list[dict] = []
+    if key or model or base:
+        pid = "default"
+        providers = [{
+            "id": pid,
+            "name": "默认供应商",
+            "base_url": base or "https://api.openai.com/v1",
+            "api_key": key,
+        }]
+        if model:
+            models = [{
+                "id": model,
+                "name": model,
+                "provider": pid,
+                "model": model,
+                "vision": False,
+            }]
+    return {
+        "version": 2,
+        "default_model": model,
+        "roles": {"analyze": model, "generate": model, "refine": model},
+        "providers": providers,
+        "models": models,
+    }
+
+
+def _public_settings(settings: dict) -> dict:
+    """Serialize settings for the UI, masking API keys."""
+    providers = []
+    for p in (settings.get("providers") or []):
+        providers.append({**p, "api_key": _mask_key(p.get("api_key", ""))})
+    return {
+        "version": settings.get("version", 2),
+        "default_model": settings.get("default_model", ""),
+        "roles": settings.get("roles", {}),
+        "providers": providers,
+        "models": settings.get("models", []),
+    }
+
+
+# ---------------------------------------------------------------------------
 # Flask app factory
 # ---------------------------------------------------------------------------
 
@@ -287,19 +355,18 @@ def create_app() -> Flask:
 
     @app.get("/api/settings")
     def get_settings():
-        settings = {}
+        raw = {}
         if SETTINGS_PATH.is_file():
             try:
-                settings = json.loads(SETTINGS_PATH.read_text("utf-8"))
+                raw = json.loads(SETTINGS_PATH.read_text("utf-8"))
             except (json.JSONDecodeError, OSError):
-                pass
-        # Mask api_key for display
-        key = settings.get("api_key", "")
-        if key and len(key) > 4:
-            settings["api_key"] = f"sk-...{key[-4:]}"
-        elif key:
-            settings["api_key"] = "sk-...****"
-        return jsonify(settings)
+                raw = {}
+        settings = _normalize_settings(raw)
+        return jsonify({
+            **_public_settings(settings),
+            "provider_presets": llm_client.PROVIDER_PRESETS,
+            "role_names": llm_client.ROLE_NAMES,
+        })
 
     @app.put("/api/settings")
     def put_settings():
@@ -307,27 +374,62 @@ def create_app() -> Flask:
         if not data or not isinstance(data, dict):
             return jsonify(error="JSON body required"), 400
 
-        # Load existing settings to preserve masked api_key
+        # Legacy flat body ({api_key, model, base_url}) -> v2.
+        if data.get("providers") is None and data.get("models") is None:
+            data = _normalize_settings(data)
+
         existing = {}
         if SETTINGS_PATH.is_file():
             try:
                 existing = json.loads(SETTINGS_PATH.read_text("utf-8"))
             except (json.JSONDecodeError, OSError):
-                pass
+                existing = {}
+        existing = _normalize_settings(existing)
+        existing_providers = {p.get("id"): p for p in (existing.get("providers") or [])}
 
-        new_key = (data.get("api_key") or "").strip()
-        # If the key looks masked, keep the old one
-        if new_key.startswith("sk-...") or not new_key:
-            data["api_key"] = existing.get("api_key", "")
-        else:
-            data["api_key"] = new_key
+        providers = []
+        for p in (data.get("providers") or []):
+            pid = (p.get("id") or "").strip()
+            if not pid:
+                continue
+            api_key = (p.get("api_key") or "").strip()
+            # Preserve the stored key when the UI sends a masked or blank value.
+            if not api_key or api_key.startswith("sk-..."):
+                api_key = (existing_providers.get(pid) or {}).get("api_key", "")
+            p_out = {
+                "id": pid,
+                "name": (p.get("name") or pid).strip(),
+                "base_url": (p.get("base_url") or "").strip(),
+                "api_key": api_key,
+            }
+            if (p.get("api_type") or "").strip():
+                p_out["api_type"] = p["api_type"].strip()
+            if p.get("chat_extra") is not None:
+                p_out["chat_extra"] = p["chat_extra"]
+            providers.append(p_out)
 
-        data["model"] = (data.get("model") or "").strip()
-        data["base_url"] = (data.get("base_url") or "").strip()
+        models = []
+        for m in (data.get("models") or []):
+            mid = (m.get("id") or "").strip()
+            if not mid:
+                continue
+            models.append({
+                "id": mid,
+                "name": (m.get("name") or mid).strip(),
+                "provider": (m.get("provider") or "").strip(),
+                "model": (m.get("model") or mid).strip(),
+                "vision": bool(m.get("vision", False)),
+            })
 
-        # Only keep known keys
-        save = {k: data[k] for k in ("api_key", "model", "base_url") if data.get(k)}
+        roles = {role: (data.get("roles") or {}).get(role, "").strip() for role in llm_client.ROLE_NAMES}
 
+        save = {
+            "version": 2,
+            "default_model": (data.get("default_model") or "").strip(),
+            "roles": roles,
+            "providers": providers,
+            "models": models,
+        }
         SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
         SETTINGS_PATH.write_text(json.dumps(save, indent=2, ensure_ascii=False), "utf-8")
         return jsonify(ok=True)

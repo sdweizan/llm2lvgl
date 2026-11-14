@@ -2,7 +2,6 @@
 
 import argparse
 import json
-import os
 import re
 import sys
 from html.parser import HTMLParser
@@ -293,6 +292,7 @@ def llm_analysis(
             {"role": "system", "content": "You classify UI pages and return strict JSON for an LVGL code-generation pipeline."},
             {"role": "user", "content": content},
         ],
+        role="analyze",
         temperature=0.1,
         max_tokens=16384,
     )
@@ -359,7 +359,7 @@ def main() -> int:
     fallback = heuristic_analysis(task_path, task, html_content)
 
     analysis = fallback
-    if not args.no_llm and (os.environ.get("OPENAI_API_KEY") or llm_client.load_settings().get("api_key")):
+    if not args.no_llm and llm_client.has_api_key():
         try:
             analysis = llm_analysis(task_path, task, html_content, fallback)
         except Exception as exc:
